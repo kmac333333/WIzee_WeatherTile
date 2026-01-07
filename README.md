@@ -21,3 +21,8 @@ Duplicates the clean, iconic weather tile from our PyQt dashboard project—now 
 
 ## Development Process
 Following proven flow: SRD → SDP → SDD → STC → One Small Builds (OSBs)
+
+## Regression Baseline
+- `baeb_wx_ut_1/` : Golden unit test baseline — minimal known-good build for display, touch, and core stack.
+  Used for regression testing, library upgrades, or new hardware validation.
+  Do not modify without consensus.
