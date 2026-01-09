@@ -9,7 +9,8 @@
 extern void update_ui_from_weather(void);
 
 WeatherData current_weather;
-StaticJsonDocument<1024> doc;
+//StaticJsonDocument<1024> doc;
+StaticJsonDocument<32768> doc;
 
 void fetch_weather() 
 {
@@ -24,7 +25,8 @@ void fetch_weather()
     Serial.println("Fetched");
 
     //String url = "https://api.weatherapi.com/v1/current.json?key=";
-    String url = "https://api.weatherapi.com/v1/forecast.json?key=" + String(WEATHER_API_KEY) + "&q=" + String(WEATHER_LOCATION) + "&days=7&aqi=no&alerts=no";
+    //String url = "https://api.weatherapi.com/v1/forecast.json?key=" + String(WEATHER_API_KEY) + "&q=" + String(WEATHER_LOCATION) + "&days=7&aqi=no&alerts=no";
+    String url = "https://api.weatherapi.com/v1/current.json?key=" + String(WEATHER_API_KEY) + "&q=" + String(WEATHER_LOCATION) + "&aqi=no"; 
     //url += WEATHER_API_KEY;
     //url += "&q=";
     //url += WEATHER_LOCATION;
@@ -40,16 +42,22 @@ void fetch_weather()
     Serial.println("Fetch complete - HTTP code: " + String(httpCode));
     if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
-        
-        deserializeJson(doc, payload);
 
-        update_weather_from_json(doc);
-        current_weather.last_update = millis();
-        current_weather.valid = true;
-        Serial.println("Fetched ok");
-        Serial.println("Parsed temp_c: " + String(current_weather.temp_c));
-        Serial.println("Parsed condition: " + String(current_weather.condition));
-      //
+        DeserializationError error = deserializeJson(doc, payload);
+        if (error != DeserializationError::Code::Ok) {
+            Serial.print("Parse error: ");
+            Serial.println(error.c_str());
+        } else {
+            //Serial.println("=== RAW JSON RESPONSE ===");
+            //Serial.println(payload);                    // Dumps the entire JSON string
+            //Serial.println("========================");
+            update_weather_from_json(doc);
+            current_weather.last_update = millis();
+            current_weather.valid = true;
+            Serial.println("Fetched ok");
+            Serial.println("Parsed temp_c: " + String(current_weather.temp_c));
+            Serial.println("Parsed condition: " + String(current_weather.condition));
+        }
     } else {
         // Keep last data
     }

@@ -189,9 +189,7 @@ void loop()
     lv_timer_handler(); /* let the GUI do its work */
     scheduler.execute();
     yield();
-    delay( 10 );
-
-
+    
     static uint32_t last_check = 0;
     if (millis() - last_check > 10000) {
       Serial.printf("Free heap: %d bytes | Display task active: %d\n",
@@ -320,7 +318,12 @@ void update_ui_from_weather() {
         snprintf(status_buf, sizeof(status_buf), "Tap to retry");
     }
 
-    if (tile_widgets[0].obj_ptr!= nullptr) lv_label_set_text(tile_widgets[0].obj_ptr, temp_buf);
-    if (tile_widgets[1].obj_ptr!= nullptr) lv_label_set_text(tile_widgets[1].obj_ptr, cond_buf);
+    //if (tile_widgets[0].obj_ptr!= nullptr) lv_label_set_text(tile_widgets[0].obj_ptr, temp_buf);
+    //if (tile_widgets[1].obj_ptr!= nullptr) lv_label_set_text(tile_widgets[1].obj_ptr, cond_buf);
+    // Force label updates (safe even if LVGL cached)
+    if (tile_widgets[0].obj_ptr != nullptr) lv_label_set_text(tile_widgets[0].obj_ptr, temp_buf);
+    if (tile_widgets[1].obj_ptr != nullptr) lv_label_set_text(tile_widgets[1].obj_ptr, cond_buf);
+    if (tile_widgets[2].obj_ptr != nullptr) lv_label_set_text(tile_widgets[2].obj_ptr, details_buf);
+    if (tile_widgets[3].obj_ptr != nullptr) lv_label_set_text(tile_widgets[3].obj_ptr, status_buf);
     lv_obj_invalidate(lv_scr_act());  // Redraw labels with new text
 }

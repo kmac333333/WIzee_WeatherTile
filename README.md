@@ -20,6 +20,9 @@ Duplicates the clean, iconic weather tile from our PyQt dashboard project—now 
 - **v0.6.0 (OSB 6)**: Full manual refresh feedback (overlay + spinner + backlight pulse + status) ✓
 - Huge custom Montserrat font for temperature ✓
 - Tap-to-refresh with non-blocking animation ✓
+## Current Milestones
+- **OSB 7 (v0.7.0)**: Real WeatherAPI.com fetch + table-driven UI + data binding ✓  
+  See `docs/osb/OSB_07_Real_Weather_Fetch.md` for details
 
 ## Regression Baselines
 These folders contain **immutable golden unit test baselines** — minimal known-good builds for display, touch, and core stack.
