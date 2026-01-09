@@ -20,3 +20,6 @@ lvgl/lv_conf.h.bak
 
 # Windows
 Thumbs.db
+
+src/weather_credentials.h
+*.secrets.h
