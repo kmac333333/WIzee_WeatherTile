@@ -22,14 +22,16 @@ void fetch_weather()
     HTTPClient http;
     
     Serial.println("Fetched");
-    #if 0
-    String url = "https://api.weatherapi.com/v1/current.json?key=";
-    url += WEATHER_API_KEY;
-    url += "&q=";
-    url += WEATHER_LOCATION;
-    url += "&aqi=no";
-#endif
-    String url = "https://api.weatherapi.com/v1/forecast.json?key=fff528869fbd42f69ec174849260601&q=Grass%20Valley,%20CA&days=7&aqi=no&alerts=no";
+
+    //String url = "https://api.weatherapi.com/v1/current.json?key=";
+    String url = "https://api.weatherapi.com/v1/forecast.json?key=" + String(WEATHER_API_KEY) + "&q=" + String(WEATHER_LOCATION) + "&days=7&aqi=no&alerts=no";
+    //url += WEATHER_API_KEY;
+    //url += "&q=";
+    //url += WEATHER_LOCATION;
+    //url += "&aqi=no";
+
+    //String url = "https://api.weatherapi.com/v1/forecast.json?key=fff528869fbd42f69ec174849260601&q=Grass%20Valley,%20CA&days=7&aqi=no&alerts=no";
+    //https://api.weatherapi.com/v1/forecast.json?key=fff528869fbd42f69ec174849260601&q=Grass Valley, CA&days=7&aqi=no&alerts=no
 
     Serial.println("Fetched started");
     Serial.println(url);

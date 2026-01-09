@@ -18,10 +18,10 @@
 *******************************************************************/
 #include "gfx_conf.h"
 #include <lvgl.h>
-
 #include <TaskScheduler.h>
 #include "WeatherData.h"
-//#include "weather_credentials.h"  // secrets
+#include <esp_task_wdt.h>
+
 
 LV_FONT_DECLARE(lv_font_montserrat_120);
 /*******************************************************************
@@ -56,7 +56,7 @@ struct WidgetConfig {
 
 Scheduler scheduler;
 Task fetchTask(30000, TASK_FOREVER, &fetch_weather);  // Check every 30s (adjust later)
-Task displayUpdateTask(30000/30, TASK_FOREVER, &update_display);  
+Task displayUpdateTask(TASK_SECOND * 1, TASK_FOREVER, &update_display);  
 // Dynamic text buffers (updated by weather fetch)
 static char temp_buf[16]    = "0°";
 static char cond_buf[32]    = "not sure";
@@ -122,6 +122,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 *******************************************************************/
 void setup()
 {
+    esp_task_wdt_deinit();  // Turn off WDT (don't leave this in production!)
     Serial.begin(115200);
     Serial.println("\n=== OSB1: WIzee-ESP32 Weather Tile ===\nLVGL v8.3.6 | LovyanGFX ^1.1.12");
 
@@ -185,9 +186,18 @@ void setup_ui(void)
 *******************************************************************/
 void loop()
 {
-  lv_timer_handler(); /* let the GUI do its work */
-  scheduler.execute();
-  delay( 10 );
+    lv_timer_handler(); /* let the GUI do its work */
+    scheduler.execute();
+    yield();
+    delay( 10 );
+
+
+    static uint32_t last_check = 0;
+    if (millis() - last_check > 10000) {
+      Serial.printf("Free heap: %d bytes | Display task active: %d\n",
+                    ESP.getFreeHeap(), displayUpdateTask.isEnabled());
+      last_check = millis();
+    }
 }
 
 /*******************************************************************
@@ -286,7 +296,7 @@ void create_refresh_overlay() {
 // Update UI from weather data
 void update_display(void)
 {
-  Serial.println( "display update" );
+  //Serial.println( "display update" );
   if (current_weather.valid == true)
   {
     update_ui_from_weather();
@@ -309,7 +319,8 @@ void update_ui_from_weather() {
         snprintf(details_buf, sizeof(details_buf), "Last update failed");
         snprintf(status_buf, sizeof(status_buf), "Tap to retry");
     }
-    if (tile_widgets[0].obj_ptr) lv_label_set_text(tile_widgets[0].obj_ptr, temp_buf);
-    if (tile_widgets[1].obj_ptr) lv_label_set_text(tile_widgets[1].obj_ptr, cond_buf);
+
+    if (tile_widgets[0].obj_ptr!= nullptr) lv_label_set_text(tile_widgets[0].obj_ptr, temp_buf);
+    if (tile_widgets[1].obj_ptr!= nullptr) lv_label_set_text(tile_widgets[1].obj_ptr, cond_buf);
     lv_obj_invalidate(lv_scr_act());  // Redraw labels with new text
 }
