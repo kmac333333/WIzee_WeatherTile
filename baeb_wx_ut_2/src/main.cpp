@@ -39,46 +39,47 @@ void create_weather_tile(void);
 void trigger_refresh(lv_event_t *e) ;
 void create_refresh_overlay();
 void update_ui_from_weather() ;
+void update_display(void);
 /*******************************************************************
 *  local data
 *******************************************************************/
-Scheduler scheduler;
-Task fetchTask(30000, TASK_FOREVER, &fetch_weather);  // Check every 30s (adjust later)
-
-// Table-driven config
-enum WidgetType { LABEL };
+// Table-driven configuration - all main widgets
 struct WidgetConfig {
-    WidgetType type;
-    const char **text_ptr;  // Pointer to data (for dynamic update)
+     char *text_ptr;          // Pointer to dynamic text (nullptr for static/icon)
     const lv_font_t *font;
     lv_color_t color;
     lv_align_t align;
-    int16_t x_ofs, y_ofs;
-    lv_obj_t *obj;  // Filled at runtime
+    int16_t x_ofs;
+    int16_t y_ofs;
+    lv_obj_t *obj_ptr;             // Where to store the created object (for chaining/icon)
 };
 
+Scheduler scheduler;
+Task fetchTask(30000, TASK_FOREVER, &fetch_weather);  // Check every 30s (adjust later)
+Task displayUpdateTask(30000/30, TASK_FOREVER, &update_display);  
+// Dynamic text buffers (updated by weather fetch)
+static char temp_buf[16]    = "0°";
+static char cond_buf[32]    = "not sure";
+static char details_buf[64] = "H:78° L:55° | Hum: 45% | Wind: 8 mph";
+static char status_buf[32]  = "Tap to refresh";
 
+// gfx objects
 static lv_obj_t *icon_obj = nullptr;  // Special case
-
 static lv_obj_t *status_label;
-static lv_obj_t *refresh_overlay;
 static lv_obj_t *spinner;
 static lv_obj_t *refresh_msg;
+ 
+static lv_obj_t *refresh_overlay;
 static bool simulating_refresh = false;
 static uint32_t last_event_time = 0;
 const uint32_t DEBOUNCE_MS = 300;
-// Placeholder static data (will be replaced by real fetch later)
-static const char *temp_text = "72°";  // Will point to dynamic
-static const char *cond_text = "Sunny";
-static const char *details_text = "H:78° L:55° | Hum: 45% | Wind: 8 mph";
-static const char *status_text = "Tap to refresh";
-static WidgetConfig tile_widgets[] = {
-    {LABEL, &temp_text, &lv_font_montserrat_120, lv_color_white(), LV_ALIGN_CENTER, 0, -60},
-    {LABEL, &cond_text, &lv_font_montserrat_48, lv_color_white(), LV_ALIGN_CENTER, 0, 10},
-    {LABEL, &details_text, &lv_font_montserrat_32, lv_color_white(), LV_ALIGN_CENTER, 0, 40},
-    {LABEL, &status_text, &lv_font_montserrat_24, lv_color_white(), LV_ALIGN_TOP_RIGHT, -20, 20},
-    // Icon placeholder (symbol as text for now)
-    {LABEL, nullptr, &lv_font_montserrat_48, lv_color_hex(0xFFD700), LV_ALIGN_CENTER, 0, -200},
+
+static  WidgetConfig tile_widgets[] = {
+    { &temp_buf[0],    &lv_font_montserrat_120, lv_color_white(), LV_ALIGN_CENTER,     0, -100, nullptr },  // Temp - base
+    { cond_buf,    &lv_font_montserrat_48,  lv_color_white(), LV_ALIGN_OUT_BOTTOM_MID, 0,  10, nullptr },  // Condition - under temp
+    { details_buf, &lv_font_montserrat_32,  lv_color_white(), LV_ALIGN_OUT_BOTTOM_MID, 0,  20, nullptr },  // Details - under condition
+    { status_buf,  &lv_font_montserrat_24,  lv_color_white(), LV_ALIGN_TOP_RIGHT,   -20, 20, nullptr },  // Status - top-right
+    { nullptr,      &lv_font_montserrat_48,  lv_color_hex(0xFFD700), LV_ALIGN_CENTER, 0, -220, icon_obj },  // Icon - centered independently
 };
 /*******************************************************************
 *  adjunct lgl display-centric stuff
@@ -158,10 +159,12 @@ void setup()
     setup_ui();
 
     scheduler.addTask(fetchTask);
+    scheduler.addTask(displayUpdateTask);
     fetchTask.enable();
+    displayUpdateTask.enable();
     // Initial fetch
-    fetch_weather();
-
+    //fetch_weather();
+    current_weather.valid = false;
     Serial.println( "Setup done" );
 }
 /*******************************************************************
@@ -190,6 +193,45 @@ void loop()
 /*******************************************************************
 *  
 *******************************************************************/
+void create_weather_tile() 
+{
+    lv_obj_clean(lv_scr_act());  // Clear existing UI
+    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x003a57), LV_PART_MAIN);
+
+    lv_obj_t *prev = nullptr;
+
+    // Create and configure each widget
+    for (size_t i = 0; i < sizeof(tile_widgets) / sizeof(tile_widgets[0]); i++) {
+         auto &cfg = tile_widgets[i];
+
+        lv_obj_t *obj = lv_label_create(lv_scr_act());
+
+        if (cfg.text_ptr) {
+            lv_label_set_text(obj, cfg.text_ptr);  // Dynamic text
+        } else {
+            lv_label_set_text(obj, LV_SYMBOL_WARNING);  // Placeholder for icon
+        }
+
+        lv_obj_set_style_text_font(obj, cfg.font, 0);
+        lv_obj_set_style_text_color(obj, cfg.color, 0);
+
+        // Alignment: Chain to previous if applicable
+        if (prev && cfg.align != LV_ALIGN_CENTER) {
+            lv_obj_align_to(obj, prev, cfg.align, cfg.x_ofs, cfg.y_ofs);
+        } else {
+            lv_obj_align(obj, cfg.align, cfg.x_ofs, cfg.y_ofs);
+        }
+
+        cfg.obj_ptr = obj;
+        
+        prev = obj;
+    }
+
+    // Optional: Future real icon handling (replace LV_SYMBOL_WARNING)
+    // if (icon_obj && current_weather.icon_code) {
+    //     // Map icon_code to LVGL symbol or image
+    // }
+}
 void trigger_refresh(lv_event_t *e) {
 
     static uint32_t refresh_start_time = 0;
@@ -240,54 +282,34 @@ void create_refresh_overlay() {
     lv_obj_set_style_text_color(refresh_msg, lv_color_white(), 0);
     lv_obj_align_to(refresh_msg, spinner, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
 }
-void create_weather_tile() 
-{
-    lv_obj_clean(lv_scr_act());
-    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x003a57), LV_PART_MAIN);
 
-    lv_obj_t *prev = nullptr;
-
-    for (auto &cfg : tile_widgets) {
-        lv_obj_t *obj = lv_label_create(lv_scr_act());
-        cfg.obj = obj;
-
-        if (cfg.text_ptr) lv_label_set_text(obj, *cfg.text_ptr);
-        lv_obj_set_style_text_font(obj, cfg.font, 0);
-        lv_obj_set_style_text_color(obj, cfg.color, 0);
-
-        if (prev) {
-            lv_obj_align_to(obj, prev, cfg.align, cfg.x_ofs, cfg.y_ofs);
-        } else {
-            lv_obj_align(obj, cfg.align, cfg.x_ofs, cfg.y_ofs);
-        }
-
-        prev = obj;
-
-        if (&cfg == &tile_widgets[4]) icon_obj = obj;  // Last is icon
-    }
-
-    // Icon special (LV_SYMBOL_WARNING for now)
-    if (icon_obj) lv_label_set_text(icon_obj, LV_SYMBOL_WARNING);
-}
 // Update UI from weather data
-void update_ui_from_weather() 
+void update_display(void)
 {
-    static char temp_buf[16];
-    snprintf(temp_buf, sizeof(temp_buf), "%.0f°", current_weather.temp_c);
-    temp_text = temp_buf;
+  Serial.println( "display update" );
+  if (current_weather.valid == true)
+  {
+    update_ui_from_weather();
+    current_weather.valid =  false;
+    Serial.println( "updated" );
+  }
 
-    static char cond_buf[32];
-    snprintf(cond_buf, sizeof(cond_buf), "%s", current_weather.condition);
-    cond_text = cond_buf;
-
-    static char details_buf[64];
-    snprintf(details_buf, sizeof(details_buf), "H:%.0f° L:%.0f° | Hum:%d%% | Wind:%.0f mph",
-             current_weather.temp_max, current_weather.temp_min,
-             current_weather.humidity, current_weather.wind_speed);
-    details_text = details_buf;
-
-    // Future: update icon based on icon_code
-
-    // Re-create or update labels (simple re-create for now)
-    create_weather_tile();
+}
+void update_ui_from_weather() {
+    if (current_weather.valid) {
+        snprintf(temp_buf, sizeof(temp_buf), "%.0f°", current_weather.temp_c);
+        snprintf(cond_buf, sizeof(cond_buf), "%s", current_weather.condition);
+        snprintf(details_buf, sizeof(details_buf), "H:%.0f° L:%.0f° | Hum:%d%% | Wind:%.0f mph",
+                 current_weather.temp_max, current_weather.temp_min,
+                 current_weather.humidity, current_weather.wind_speed);
+        snprintf(status_buf, sizeof(status_buf), "Updated just now");
+    } else {
+        snprintf(temp_buf, sizeof(temp_buf), "N/A");
+        snprintf(cond_buf, sizeof(cond_buf), "Offline");
+        snprintf(details_buf, sizeof(details_buf), "Last update failed");
+        snprintf(status_buf, sizeof(status_buf), "Tap to retry");
+    }
+    if (tile_widgets[0].obj_ptr) lv_label_set_text(tile_widgets[0].obj_ptr, temp_buf);
+    if (tile_widgets[1].obj_ptr) lv_label_set_text(tile_widgets[1].obj_ptr, cond_buf);
+    lv_obj_invalidate(lv_scr_act());  // Redraw labels with new text
 }

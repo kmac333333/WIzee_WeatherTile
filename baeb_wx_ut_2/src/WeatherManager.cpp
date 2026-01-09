@@ -6,7 +6,7 @@
 #include "weather_credentials.h"  // secrets
 
 
-
+extern void update_ui_from_weather(void);
 
 WeatherData current_weather;
 StaticJsonDocument<1024> doc;
@@ -22,16 +22,20 @@ void fetch_weather()
     HTTPClient http;
     
     Serial.println("Fetched");
+    #if 0
     String url = "https://api.weatherapi.com/v1/current.json?key=";
     url += WEATHER_API_KEY;
     url += "&q=";
     url += WEATHER_LOCATION;
     url += "&aqi=no";
+#endif
+    String url = "https://api.weatherapi.com/v1/forecast.json?key=fff528869fbd42f69ec174849260601&q=Grass%20Valley,%20CA&days=7&aqi=no&alerts=no";
 
     Serial.println("Fetched started");
+    Serial.println(url);
     http.begin(url);
     int httpCode = http.GET();
-
+    Serial.println("Fetch complete - HTTP code: " + String(httpCode));
     if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
         
@@ -40,8 +44,10 @@ void fetch_weather()
         update_weather_from_json(doc);
         current_weather.last_update = millis();
         current_weather.valid = true;
-
         Serial.println("Fetched ok");
+        Serial.println("Parsed temp_c: " + String(current_weather.temp_c));
+        Serial.println("Parsed condition: " + String(current_weather.condition));
+      //
     } else {
         // Keep last data
     }
