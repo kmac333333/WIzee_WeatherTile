@@ -33,3 +33,8 @@ Used for regression testing, library upgrades, or new hardware validation.
 Following proven flow: SRD → SDP → SDD → STC → One Small Builds (OSBs)
 
 Main development line is in top-level `src/` (starting OSB 7+ for real weather fetch).
+
+## Documentation
+- Requirements & Design: See `docs/SRD_v1.3.md` and `docs/SDP_v1.1.md`
+- Build Notes: Detailed per-OSB logs in `docs/osb/`
+- Roadmap: `docs/Roadmap.md`
