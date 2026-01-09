@@ -2,6 +2,9 @@ https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/b
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_1/src/main.cpp
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_1/platformio.ini
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_1/include/lv_conf.h
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_2/src/lv_font_montserrat_120.c
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_2/src/WeatherManager.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_2/src/WeatherData.h
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_1/raw_file_urls.txt
 
 
