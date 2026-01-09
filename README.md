@@ -13,16 +13,23 @@ Duplicates the clean, iconic weather tile from our PyQt dashboard project—now 
 - Arduino Framework (ESP32-S3)
 - LovyanGFX ^1.1.12
 - LVGL v8.3.6
-- TaskScheduler (cooperative multitasking)
-- Future: OpenWeatherMap API, MQTT heartbeat, behavior-based scheduling
+- TaskScheduler (cooperative multitasking, future)
+- OpenWeatherMap API, MQTT heartbeat, behavior-based scheduling (in progress)
 
 ## Current Status
-- **v0.1.0 (OSB 1)**: Display init, LVGL basic UI, capacitive touch reporting ✓
+- **v0.6.0 (OSB 6)**: Full manual refresh feedback (overlay + spinner + backlight pulse + status) ✓
+- Huge custom Montserrat font for temperature ✓
+- Tap-to-refresh with non-blocking animation ✓
+
+## Regression Baselines
+These folders contain **immutable golden unit test baselines** — minimal known-good builds for display, touch, and core stack.
+Used for regression testing, library upgrades, or new hardware validation.
+**Do not modify without consensus.**
+
+- `baeb_wx_ut_1/` : Original baseline (OSB 1 state, proven stable)
+- `baeb_wx_ut_2/` : Secondary baseline (copied from _ut_1, available for controlled experiments)
 
 ## Development Process
 Following proven flow: SRD → SDP → SDD → STC → One Small Builds (OSBs)
 
-## Regression Baseline
-- `baeb_wx_ut_1/` : Golden unit test baseline — minimal known-good build for display, touch, and core stack.
-  Used for regression testing, library upgrades, or new hardware validation.
-  Do not modify without consensus.
+Main development line is in top-level `src/` (starting OSB 7+ for real weather fetch).
