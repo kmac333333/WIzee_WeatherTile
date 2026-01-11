@@ -1,5 +1,7 @@
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/gfx_conf.h
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/main.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/announce.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/include/announce.h
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/platformio.ini
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/include/lv_conf.h
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/lv_font_montserrat_120.c
@@ -12,6 +14,13 @@ https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/b
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/model2.cpp
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/cli.cpp
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/myWiFi2.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/myntp.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/include/myntp.h
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/storage.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/include/storage.h
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/src/util.cpp
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/include/util.h
+https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/README.md
 https://raw.githubusercontent.com/kmac333333/WIzee_WeatherTile/refs/heads/main/baeb_wx_ut_3/raw_file_urls.txt
 
 
