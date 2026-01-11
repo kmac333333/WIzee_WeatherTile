@@ -27,6 +27,8 @@
 #include    "model2.h"
 #include    "gui.h"
 #include    "announce.h"
+#include    "myntp.h"
+#include    "storage.h"
 #include    "cli.h"
 #include	"myWiFi2.h"
 #include    <lvgl.h>
@@ -49,6 +51,7 @@ static void cb_commandLine(void);
 static void cb_viewUpdate(void);
 static void cb_fetchWeather(void);
 static void cb_wifiStatus(void);
+static void cb_NTPUpdate(void);
 /*******************************************************************
 *  local data
 *******************************************************************/
@@ -65,7 +68,7 @@ Task CommandLineCheck(TASK_SECOND / 1000, TASK_FOREVER, &cb_commandLine, &ts, fa
 Task fetchTask(30000, TASK_FOREVER,                     &cb_fetchWeather, &ts, false);  // Check every 30s (adjust later)
 Task displayUpdateTask(TASK_SECOND * 1,   TASK_FOREVER, &update_display, &ts, false);  
 Task WiFiStatusCheck(MS(667), TASK_FOREVER,             &cb_wifiStatus, &ts, false);
-// Dynamic text buffers (updated by weather fetch)
+Task NTPUpdateTask(TASK_SECOND, TASK_FOREVER,           &cb_NTPUpdate, &ts, false);
 
 
 /***************************************************************//**
@@ -82,6 +85,12 @@ void setup()
     while (!Serial);
     delay(50);
     Serial.println("\n\r0) Setup - start");
+    /*************************************
+    // 0.0.0 init file system
+    *************************************/
+    Serial.println("0) FS Init - start");
+    initFS();
+    Serial.println("0) FS Init - done");
     /*************************************
     // 0.1  init model
     *************************************/
@@ -101,6 +110,12 @@ void setup()
     announce();
     Serial.println("4) Announce - done");
     /*************************************
+    // 0.0.7 ntp init
+    *************************************/
+    Serial.println("7) NTP Init - start");
+    initTime(&model);
+    Serial.println("7) NTP Init - done");
+    /*************************************
     // go
     *************************************/
     current_weather.valid = false;
@@ -108,6 +123,7 @@ void setup()
     fetchTask.enableDelayed(MS(229));
     displayUpdateTask.enableDelayed(MS(229));
     WiFiStatusCheck.enableDelayed(MS(97));
+    NTPUpdateTask.enableDelayed(MS(101));
     //
     Serial.println( "Setup done" );
 }
@@ -172,4 +188,10 @@ static void cb_fetchWeather(void)
     if (pm->WIFIonline == false) return;
     fetch_weather();
 }
-	
+/*******************************************************************
+* @brief 5.0  void cb_NTPUpdate(void)
+*******************************************************************/
+void cb_NTPUpdate(void)
+{
+    do_NTPUpdate(&model);
+}

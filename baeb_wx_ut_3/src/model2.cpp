@@ -1,9 +1,14 @@
 /*******************************************************************
 *  include files
 *******************************************************************/
+#define _TASK_TIMECRITICAL
+
+#include    "FS.h"
+#include    <LITTLEFS.h>
 #include    "model2.h"
-//#include    "weather_credentials.h"
-//#include    "gfx_conf.h"
+#include    "storage.h"
+
+#include    <TaskSchedulerDeclarations.h>
 /*******************************************************************
 *  imports
 *******************************************************************/
@@ -33,18 +38,48 @@ void initModel(PMODEL pm)
     int b;
 
     strcpy(name, MODEL_FILENAME);
-    pm->tft = &tft;
+    memset(&m, 0x00, sizeof(m));
+    readFile2(LITTLEFS, name, (uint8_t*)&m, sizeof(model));
+    Serial.printf("Reading MODEL file: %s\n", name);
+    
         // RUN path
     if ((strcmp(m._xx_, "_xx_") != 0) || (sizeof(MODEL) != m.size))
     {
         internal_MkNull_MODEL(pm);
-        //writeFile2(LITTLEFS, name, (const uint8_t*)pm, sizeof(model));
+        writeFile2(LITTLEFS, name, (const uint8_t*)pm, sizeof(model));
         Serial.printf("Default file created\n");
     }
     else {
         Serial.printf("Valid\n");
+        memcpy(pm, &m, sizeof(model));
     }
     pm->op_mode = RUN;
+    pm->tft = &tft;
+}
+/*******************************************************************
+*  void saveModel()
+* - saves MODEL struct to FS
+*******************************************************************/
+void saveModel()
+{
+    PMODEL pm = &model;
+
+    writeFile2(LITTLEFS, MODEL_FILENAME, (const uint8_t*)pm, sizeof(model));
+    Serial.printf("Saved\n");
+}
+/*******************************************************************
+*  void saveDefaultMode()
+* - creates and saves a default model
+*******************************************************************/
+void saveDefaultMode()
+{
+    PMODEL pm = &model;
+    int b;
+
+    internal_MkNull_MODEL(pm);
+    writeFile2(LITTLEFS, MODEL_FILENAME, (const uint8_t*)pm, sizeof(model));
+    Serial.printf("Default file created\n");
+    pm->reset_request = true;
 }
 /***************************************************************//**
 *  @brief void internal_MkNull_MODEL(PMODEL pm)
@@ -138,4 +173,92 @@ static void mergeTopicParts(PMODEL pm, int device, char * partA, char * partB, c
     strcat(d, "/"); strcat(d, pm->devices[n].topicPrefixPart[2]);
     strcat(d, "/"); strcat(d, pm->devices[n].topicPrefixPart[3]);
     strcat(d, "/");
+}
+
+/***************************************************************//**
+*  @brief void internal_dump_model(void* m)
+*  @verbatim - dumps memory as if it was a MODEL
+*******************************************************************/
+void internal_dump_model(void* m)
+{
+    PMODEL pm = (PMODEL)m;
+
+    Serial.println("dm,---------------------");
+    // time
+    Serial.printf("time: %d.%d.%d %d-%d-%d\n",
+        pm->hour,
+        pm->minute,
+        pm->second,
+        pm->day,
+        pm->month,
+        pm->year
+    );
+    // model state
+    Serial.print("tag:                 ");  Serial.println(pm->_xx_);
+    Serial.print("model size:          ");  Serial.println(pm->size);
+    // system
+    Serial.print("clientId:            ");  Serial.println(pm->clientId);
+    Serial.print("chipId:              ");  Serial.println(pm->chip_id);
+    Serial.print("halt timeout:        ");  Serial.println(pm->halt_timeout);
+    // print format
+    Serial.print("format:              ");  Serial.println(pm->print_format);
+#if 0
+    // temperature sensor
+    Serial.print("celsius 0:           ");  Serial.println(pm->devices[0].celsius);
+    Serial.print("fahrenheit 0:        ");  Serial.println(pm->devices[0].fahrenheit);
+    Serial.print("tempString1 :        ");  Serial.println(pm->devices[0].tempString);
+    Serial.print("celsius 1:           ");  Serial.println(pm->devices[1].celsius);
+    Serial.print("fahrenheit 1:        ");  Serial.println(pm->devices[1].fahrenheit);
+    Serial.print("tempString 1:        ");  Serial.println(pm->devices[1].tempString);
+    Serial.print("data_ready_temp:     ");  Serial.println(pm->data_ready_temp);
+    Serial.print("swap:                ");  Serial.println(pm->temp_sw);
+#endif
+    // heartbeat
+    Serial.print("bHeartBeat: ");             Serial.println(pm->bHeartBeat);
+    Serial.print("data_ready_heart_beat: ");  Serial.println(pm->data_ready_heart_beat);
+    // wifi
+    Serial.print("node_ip_address:     ");  Serial.println(pm->node_ip_address.toString().c_str());
+    Serial.print("hostname:            ");  Serial.println(pm->hostname);
+    Serial.print("data_ready_wifi:     ");  Serial.println(pm->data_ready_wifi);
+    Serial.print("wait_count:          ");  Serial.println(pm->wait_count);
+    Serial.print("WIFIonline:          ");  Serial.println(pm->WIFIonline);
+    Serial.print("diag:                ");  Serial.println(pm->doDiag);
+    Serial.print("AP_data_ready_wifi:  ");  Serial.println(pm->AP_data_ready_wifi);
+    Serial.print("APonline:            ");  Serial.println(pm->APonline);
+    Serial.print("STAssid:             ");  Serial.println(pm->STAssid);
+    Serial.print("STApassword:         ");  Serial.println(pm->STApassword);
+    Serial.print("APssid:              ");  Serial.println(pm->APssid);
+    Serial.print("APpassword:          ");  Serial.println(pm->APpassword);
+    // mqtt
+    Serial.print("mqtt_server_address   ");  Serial.println(pm->mqtt_server_address.toString().c_str());
+    Serial.print("mqtt_server_hostname  ");  Serial.println(pm->mqtt_server_hostname);
+    Serial.print("use ip address        ");  Serial.println(pm->use_ip_address);
+    Serial.print("mqtt_server_connected ");  Serial.println(pm->mqtt_server_connected);
+    Serial.print("publish interval      ");  Serial.println(pm->publish_interval);
+    Serial.print("publish topic prefix A");  Serial.println(pm->publish_topic_prefix_A);
+    Serial.print("publish topic  A      ");  Serial.println(pm->publish_topic_A);
+    Serial.print("publish topic prefix B");  Serial.println(pm->publish_topic_prefix_B);
+    Serial.print("publish topic  B      ");  Serial.println(pm->publish_topic_B);
+#if 0
+    int i;
+    ip4_addr_t* ip;
+    Serial.println("AP connections:      ");
+    for (i = 0; i < ARRAY_COUNT(pm->ips); i++)
+    {
+        Serial.printf("%d: ", pm->ips[i].active);
+        Serial.printf("%d ", pm->aids[i].aid);
+        Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X ",
+            pm->aids[i].mac[0],
+            pm->aids[i].mac[1],
+            pm->aids[i].mac[2],
+            pm->aids[i].mac[3],
+            pm->aids[i].mac[4],
+            pm->aids[i].mac[5]
+        );
+        Serial.printf("%s", pm->ips[i].ip);
+        Serial.printf("\n");
+    }
+#endif
+    Serial.println("dm,---------------------");
+
 }

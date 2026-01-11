@@ -6,6 +6,7 @@ Duplicates the iconic weather tile from our PyQt6 dashboard project — now on a
 [![PlatformIO](https://img.shields.io/badge/PlatformIO-Embedded-blue?logo=platformio)](https://platformio.org)
 [![LVGL](https://img.shields.io/badge/LVGL-v8.3.6-green)](https://lvgl.io)
 [![WeatherAPI](https://img.shields.io/badge/WeatherAPI.com-Live-orange)](https://www.weatherapi.com)
+[![TaskScheduler by Arkhipenko](https://img.shields.io/badge/TaskScheduler-v3.8.0-009688?logo=github&style=flat-square&logoColor=white)](https://github.com/arkhipenko/TaskScheduler)
 
 ## Hardware
 - Elecrow WIzee-ESP32 5" (800x480 RGB TFT + GT911 capacitive touch)

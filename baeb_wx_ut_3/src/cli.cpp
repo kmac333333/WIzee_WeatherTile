@@ -12,10 +12,11 @@
 *  include files
 *******************************************************************/
 #define _TASK_TIMECRITICAL
-#include "FS.h"
-#include <LITTLEFS.h>
+#include    "FS.h"
+#include    <LITTLEFS.h>
 #include    "model2.h"
-
+#include    "storage.h"
+#include    "util.h"
 #if defined(ESP32)
 #include    <rom/rtc.h>    // Low-Level ESP32 resources
 #endif
@@ -26,7 +27,7 @@
 *  imports
 *******************************************************************/
 extern Task CommandLineCheck;
-extern Task ViewUpdateTask;
+extern Task displayUpdateTask;
 extern Task WiFiStatusCheck;
 extern Task TouchSampleTask;
 extern Task MQTTStatusCheck;
@@ -281,6 +282,18 @@ DEF_HANDLER(dump_report, ARG)
 //static void do_format_command(PMODEL pm)
 DEF_HANDLER(format, ARG)
 {
+        PMODEL pm = &model;
+    int a;
+
+    Serial.printf("%s\n", commandBuffer);
+    //dump_hex(commandBuffer, sizeof(commandBuffer));
+    if (commandBuffer[2] != 0x00) {
+        
+        a = atoi(&commandBuffer[2]);
+        a = iminMax(a, 0, 5);
+        pm->print_format = a;
+    }
+    Serial.printf("f,%d\r\n", pm->print_format);
 }
 /***************************************************************//**
 * @brief 8.0.7 static void do_perf_command(PMODEL pm)
@@ -288,7 +301,14 @@ DEF_HANDLER(format, ARG)
 //static void do_perf_command(PMODEL pm)
 DEF_HANDLER(perf, ARG)
 {
-
+    const char* format_p = "perf,%d,%lu\r\n";
+    char szStr[20];
+    int i;
+   
+    for (i = 0; i < 10; i++) {
+        sprintf(szStr, format_p, i, perf[i]);
+        Serial.print(szStr);
+    }
 }
 /***************************************************************//**
 * @brief  8.0.8 static void do_echo_command(PMODEL pm)
@@ -317,8 +337,9 @@ DEF_HANDLER(o, ARG)
     Serial.println("=========== Task     Start Delay  Overrun    Run Count");
     //Serial.printf(format_o, "LedBlink", LedBlink.getStartDelay(), LedBlink.getOverrun(), LedBlink.getRunCounter());
     Serial.printf(format_o, "CommandLineCheck", CommandLineCheck.getStartDelay(), CommandLineCheck.getOverrun(), CommandLineCheck.getRunCounter());
+    Serial.printf(format_o, "displayUpdateTask", displayUpdateTask.getStartDelay(), displayUpdateTask.getOverrun(), displayUpdateTask.getRunCounter());
     //Serial.printf(format_o, "ViewUpdateTask", ViewUpdateTask.getStartDelay(), ViewUpdateTask.getOverrun(), ViewUpdateTask.getRunCounter());
-    //Serial.printf(format_o, "WiFiStatusCheck", WiFiStatusCheck.getStartDelay(), WiFiStatusCheck.getOverrun(), WiFiStatusCheck.getRunCounter());
+    Serial.printf(format_o, "WiFiStatusCheck", WiFiStatusCheck.getStartDelay(), WiFiStatusCheck.getOverrun(), WiFiStatusCheck.getRunCounter());
     //Serial.printf(format_o, "TouchSampleTask", TouchSampleTask.getStartDelay(), TouchSampleTask.getOverrun(), TouchSampleTask.getRunCounter());
     //Serial.printf(format_o, "MQTTStatusCheck", MQTTStatusCheck.getStartDelay(), MQTTStatusCheck.getOverrun(), MQTTStatusCheck.getRunCounter());
     //Serial.printf(format_o, "NTPUpdateTask", NTPUpdateTask.getStartDelay(), NTPUpdateTask.getOverrun(), NTPUpdateTask.getRunCounter());
@@ -358,7 +379,7 @@ DEF_HANDLER(switch, ARG)
 DEF_HANDLER(dump_model, ARG)
 {
     PMODEL pm = &model;
-   // internal_dump_model(pm);
+    internal_dump_model(pm);
 }
 
 
@@ -367,12 +388,28 @@ DEF_HANDLER(dump_model, ARG)
 *******************************************************************/
 static void do_Report(int print_format)
 {
+    DTi(8);
+    if (print_format == 0) {}
+    else if (print_format == 1) {
+        reportData_format_1();  // do multiple times to get deltastamps
+    }
+    else if (print_format == 2) {}
+    else if (print_format == 3) {}
+    else if (print_format == 4) {}
+    else if (print_format == 5) {}
+    DTo(8);
 }
 /***************************************************************//**
 *  Format 1
 *******************************************************************/
 static void reportData_format_1(void)
 {
+    const char* f4 = "%4.1f,%4.1f,%4.1f,";
+    const char* f2 = "%4.1f,%4.1f";
+
+    Serial.printf("f1,%08ld", deltastamp());
+
+    Serial.println();
 }
 /***************************************************************//**
 * @brief 8.1.2 static void do_list_dir_command(PMODEL pm)
@@ -380,7 +417,7 @@ static void reportData_format_1(void)
 //static void do_help_command(PMODEL pm)
 DEF_HANDLER(list_dir, ARG)
 {
- //   listDir(LITTLEFS, "/", 3);
+    listDir(LITTLEFS, "/", 3);
 }
 
 /***************************************************************//**
@@ -397,7 +434,7 @@ DEF_HANDLER(save_model, ARG)
     strcpy(name, "/");
     strcat(name, args[1]);
 
- //   writeFile2(LITTLEFS, name, (const uint8_t *) & model, sizeof(model));
+    writeFile2(LITTLEFS, name, (const uint8_t *) & model, sizeof(model));
 }
 /***************************************************************//**
 * @brief 8.1.4 static void do_delete_file_command(PMODEL pm)
@@ -411,7 +448,7 @@ DEF_HANDLER(delete_file, ARG)
     Serial.printf("rm, rm %s\n", args[1]);
     strcpy(buf, "/");
     strcat(buf, args[1]);
- //   deleteFile(LITTLEFS, buf);
+    deleteFile(LITTLEFS, buf);
 }
 /***************************************************************//**
 * @brief 8.1.5 static void do_load_model_command(PMODEL pm)
@@ -427,11 +464,11 @@ DEF_HANDLER(load_model, ARG)
     Serial.printf("lm, lm %s\n", args[1]);
     strcpy(name, "/");
     strcat(name, args[1]);
- //   readFile2(LITTLEFS, name, ( uint8_t*)&m, sizeof(model));
+    readFile2(LITTLEFS, name, ( uint8_t*)&m, sizeof(model));
 
- //   internal_dump_model( &m);
+    internal_dump_model( &m);
     memcpy(&model, &m, sizeof(model));
- //   internal_dump_model(&model);
+    internal_dump_model(&model);
 }
 /***************************************************************//**
 * @brief 8.1.6 static void do_set_client_command(PMODEL pm)
@@ -461,7 +498,7 @@ DEF_HANDLER(make_default, ARG)
 {
     extern void saveDefaultMode();
 
- //   saveDefaultMode();
+    saveDefaultMode();
 }
 /***************************************************************//**
 * @brief 8.2.0 static do_set_mqtt_ip_command()
