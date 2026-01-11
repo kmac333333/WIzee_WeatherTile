@@ -33,11 +33,16 @@ Duplicates the iconic weather tile from our PyQt6 dashboard project — now on a
 ## Current Milestones
 - **OSB 7 (v0.7.0)**: Real WeatherAPI.com fetch + table-driven UI + data binding ✓  
   See `docs/osb/OSB_07_Real_Weather_Fetch.md` for details
-  ## Next Milestones (OSB 7.5 & 8+)
+## Next Milestones (OSB 7.5 & 8+)
 - **OSB 7.5**: Further refactor (async HTTP fetch, CLI expansion, full design guide compliance)
 - **OSB 8**: Real icons (local map from condition.code), periodic/behavior scheduling, MQTT heartbeat
 - **Future**: Async WiFi/HTTP libraries, SD icon cache, UI polish, enclosure OpenSCAD
-
+## OSB 7.5 Intermediate: NTP sync, NVS storage, CLI directory functions
+- Added NTP sync (myntp.cpp/h) — waits for WiFi, gets time, updates RTC
+- Model init now loads from NVS (storage.cpp/h) — persistence across reboots
+- CLI expanded with directory functions (ls, cd, pwd, etc.)
+- Refactored to single Model pattern, task-driven WiFi, non-blocking loop
+- Stability: Decoupled NTP/RTC from blocking calls
 ## Regression Baselines
 Immutable golden unit test baselines — known-good states for regression testing, library upgrades, or new hardware validation.  
 **Do not modify without consensus.**
