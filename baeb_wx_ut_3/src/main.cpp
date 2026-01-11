@@ -26,6 +26,7 @@
 #include    "gfx_conf.h"
 #include    "model2.h"
 #include    "gui.h"
+#include    "announce.h"
 #include    "cli.h"
 #include	"myWiFi2.h"
 #include    <lvgl.h>
@@ -93,6 +94,12 @@ void setup()
     Serial.println("1) OLED Init - start");
     void* disp = ui_setup(&model);
     Serial.println("1) OLED Init - done");
+    /*************************************
+    // 0.0.2 who ami i
+    *************************************/
+    Serial.println("4) Announce - start");
+    announce();
+    Serial.println("4) Announce - done");
     /*************************************
     // go
     *************************************/
